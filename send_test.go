@@ -10,7 +10,7 @@ import (
 const (
 	testTo1  = "to1@example.com"
 	testTo2  = "to2@example.com"
-	testFrom = "from@example.com"
+	testFrom = "from"
 	testBody = "Test message"
 	testMsg  = "To: " + testTo1 + ", " + testTo2 + "\r\n" +
 		"From: " + testFrom + "\r\n" +
@@ -55,6 +55,7 @@ func getTestMessage() *Message {
 	m.SetHeader("From", testFrom)
 	m.SetHeader("To", testTo1, testTo2)
 	m.SetBody("text/plain", testBody)
+	m.SkipUsernameCheck = true
 
 	return m
 }

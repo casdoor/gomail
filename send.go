@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/mail"
+	"strings"
 )
 
 // Sender is the interface that wraps the Send method.
@@ -70,7 +71,7 @@ func (m *Message) getFrom() (string, error) {
 		}
 	}
 
-	return parseAddress(from[0])
+	return parseAddress(from[0], m.SkipUsernameCheck)
 }
 
 func (m *Message) getRecipients() ([]string, error) {
@@ -85,7 +86,7 @@ func (m *Message) getRecipients() ([]string, error) {
 	for _, field := range []string{"To", "Cc", "Bcc"} {
 		if addresses, ok := m.header[field]; ok {
 			for _, a := range addresses {
-				addr, err := parseAddress(a)
+				addr, err := parseAddress(a, false)
 				if err != nil {
 					return nil, err
 				}
@@ -107,9 +108,16 @@ func addAddress(list []string, addr string) []string {
 	return append(list, addr)
 }
 
-func parseAddress(field string) (string, error) {
+func parseAddress(field string, skipCheck bool) (string, error) {
 	addr, err := mail.ParseAddress(field)
 	if err != nil {
+		if skipCheck {
+			errStr := err.Error()
+			if !strings.Contains(field, "@") && strings.Contains(errStr, "missing") && strings.Contains(errStr, "@") {
+				return field, nil
+			}
+		}
+
 		return "", fmt.Errorf("gomail: invalid address %q: %v", field, err)
 	}
 	return addr.Address, nil

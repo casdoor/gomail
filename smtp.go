@@ -33,6 +33,9 @@ type Dialer struct {
 	// LocalName is the hostname sent to the SMTP server with the HELO command.
 	// By default, "localhost" is sent.
 	LocalName string
+	// SkipUsernameCheck skips checking whether username contains "@", useful for Mailtrap:
+	// https://github.com/casdoor/casdoor/issues/1516
+	SkipUsernameCheck bool
 }
 
 // NewDialer returns a new SMTP Dialer. The given parameters are used to connect

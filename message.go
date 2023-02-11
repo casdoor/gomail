@@ -18,6 +18,8 @@ type Message struct {
 	encoding    Encoding
 	hEncoder    mimeEncoder
 	buf         bytes.Buffer
+
+	SkipUsernameCheck bool
 }
 
 type header map[string][]string
