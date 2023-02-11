@@ -1,4 +1,4 @@
-module gopkg.in/gomail.v2
+module github.com/casdoor/gomail/v2
 
 go 1.16
 
