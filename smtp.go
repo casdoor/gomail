@@ -8,6 +8,8 @@ import (
 	"net/smtp"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 // A Dialer is a dialer to an SMTP server.
@@ -36,6 +38,8 @@ type Dialer struct {
 	// SkipUsernameCheck skips checking whether username contains "@", useful for Mailtrap:
 	// https://github.com/casdoor/casdoor/issues/1516
 	SkipUsernameCheck bool
+	// Socks5Proxy specified the socks5 proxy address if enabled
+	Socks5Proxy string
 }
 
 // NewDialer returns a new SMTP Dialer. The given parameters are used to connect
@@ -58,10 +62,27 @@ func NewPlainDialer(host string, port int, username, password string) *Dialer {
 	return NewDialer(host, port, username, password)
 }
 
+// SetSocks5Proxy sets the socks5 proxy to enable proxy for the dialer
+func (d *Dialer) SetSocks5Proxy(proxy string) {
+	d.Socks5Proxy = proxy
+}
+
 // Dial dials and authenticates to an SMTP server. The returned SendCloser
 // should be closed when done using it.
 func (d *Dialer) Dial() (SendCloser, error) {
-	conn, err := netDialTimeout("tcp", addr(d.Host, d.Port), 10*time.Second)
+	var conn net.Conn
+	var err error
+
+	if d.Socks5Proxy != "" {
+		dialSocksProxy, err := proxy.SOCKS5("tcp", d.Socks5Proxy, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+		conn, err = dialSocksProxy.Dial("tcp", addr(d.Host, d.Port))
+	} else {
+		conn, err = netDialTimeout("tcp", addr(d.Host, d.Port), 10*time.Second)
+	}
+
 	if err != nil {
 		return nil, err
 	}
