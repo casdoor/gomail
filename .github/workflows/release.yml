@@ -32,7 +32,6 @@ jobs:
           npm install -g \
             semantic-release@23 \
             @semantic-release/changelog@6 \
-            @semantic-release/git@10 \
             @semantic-release/github@10 \
             conventional-changelog-conventionalcommits@7
 
