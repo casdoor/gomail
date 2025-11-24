@@ -82,11 +82,9 @@ func (d *Dialer) Dial() (SendCloser, error) {
 	} else {
 		conn, err = netDialTimeout("tcp", addr(d.Host, d.Port), 10*time.Second)
 	}
-
 	if err != nil {
 		return nil, err
 	}
-
 	if conn == nil {
 		return nil, fmt.Errorf("dial failed: connection is nil")
 	}
