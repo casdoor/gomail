@@ -16,11 +16,31 @@ const (
 	testSSLPort = 465
 )
 
+// mockConn implements net.Conn for testing purposes
+type mockConn struct {
+	net.Conn
+}
+
+func (m *mockConn) SetDeadline(t time.Time) error {
+	return nil
+}
+
+func (m *mockConn) SetReadDeadline(t time.Time) error {
+	return nil
+}
+
+func (m *mockConn) SetWriteDeadline(t time.Time) error {
+	return nil
+}
+
+func (m *mockConn) Close() error {
+	return nil
+}
+
 var (
-	testConn    = &net.TCPConn{}
-	testTLSConn = &tls.Conn{}
-	testConfig  = &tls.Config{InsecureSkipVerify: true}
-	testAuth    = smtp.PlainAuth("", testUser, testPwd, testHost)
+	testConn   = &mockConn{}
+	testConfig = &tls.Config{InsecureSkipVerify: true}
+	testAuth   = smtp.PlainAuth("", testUser, testPwd, testHost)
 )
 
 func TestDialer(t *testing.T) {
@@ -136,6 +156,29 @@ func TestDialerTimeout(t *testing.T) {
 		"Quit",
 		"Close",
 	})
+}
+
+func TestSMTPClientTimeout(t *testing.T) {
+	d := &Dialer{
+		Host: testHost,
+		Port: testPort,
+	}
+
+	netDialTimeout = func(network, address string, d time.Duration) (net.Conn, error) {
+		return testConn, nil
+	}
+
+	// Mock smtpNewClient to return a timeout error
+	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {
+		// Simulate a timeout error that would occur if SetDeadline was set
+		// and the operation took too long
+		return nil, &net.OpError{Op: "read", Net: "tcp", Err: io.EOF}
+	}
+
+	_, err := d.Dial()
+	if err == nil {
+		t.Error("Expected error from smtpNewClient timeout, got nil")
+	}
 }
 
 type mockClient struct {
@@ -264,7 +307,8 @@ func doTestSendMail(t *testing.T, d *Dialer, want []string, timeout bool) {
 			t.Errorf("Invalid conn, got %#v, want %#v", conn, testConn)
 		}
 		assertConfig(t, config, testClient.config)
-		return testTLSConn
+		// Return a properly initialized TLS connection that wraps our mock
+		return tls.Client(testConn, config)
 	}
 
 	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {

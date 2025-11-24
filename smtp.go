@@ -93,8 +93,21 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		conn = tlsClient(conn, d.tlsConfig())
 	}
 
+	// Set a 5-second timeout for SMTP client creation
+	if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		conn.Close()
+		return nil, err
+	}
+
 	c, err := smtpNewClient(conn, d.Host)
 	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	// Clear the deadline after successful client creation
+	if err := conn.SetDeadline(time.Time{}); err != nil {
+		c.Close()
 		return nil, err
 	}
 
