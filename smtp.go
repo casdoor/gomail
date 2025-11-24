@@ -12,11 +12,6 @@ import (
 	"golang.org/x/net/proxy"
 )
 
-const (
-	// smtpClientTimeout is the timeout for SMTP client creation
-	smtpClientTimeout = 5 * time.Second
-)
-
 // A Dialer is a dialer to an SMTP server.
 type Dialer struct {
 	// Host represents the host of the SMTP server.
@@ -45,6 +40,9 @@ type Dialer struct {
 	SkipUsernameCheck bool
 	// Socks5Proxy specified the socks5 proxy address if enabled
 	Socks5Proxy string
+	// SMTPClientTimeout is the timeout for SMTP client creation.
+	// If zero, a default timeout of 5 seconds is used.
+	SMTPClientTimeout time.Duration
 }
 
 // NewDialer returns a new SMTP Dialer. The given parameters are used to connect
@@ -98,8 +96,12 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		conn = tlsClient(conn, d.tlsConfig())
 	}
 
-	// Set a 5-second timeout for SMTP client creation
-	if err := conn.SetDeadline(time.Now().Add(smtpClientTimeout)); err != nil {
+	// Set timeout for SMTP client creation
+	timeout := d.SMTPClientTimeout
+	if timeout == 0 {
+		timeout = 5 * time.Second // Default timeout
+	}
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		conn.Close()
 		return nil, err
 	}
