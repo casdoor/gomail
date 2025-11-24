@@ -40,6 +40,9 @@ type Dialer struct {
 	SkipUsernameCheck bool
 	// Socks5Proxy specified the socks5 proxy address if enabled
 	Socks5Proxy string
+	// SMTPClientTimeout is the timeout for SMTP client creation.
+	// If zero, a default timeout of 5 seconds is used.
+	SMTPClientTimeout time.Duration
 }
 
 // NewDialer returns a new SMTP Dialer. The given parameters are used to connect
@@ -93,8 +96,25 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		conn = tlsClient(conn, d.tlsConfig())
 	}
 
+	// Set timeout for SMTP client creation
+	timeout := d.SMTPClientTimeout
+	if timeout == 0 {
+		timeout = 5 * time.Second // Default timeout
+	}
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		conn.Close()
+		return nil, err
+	}
+
 	c, err := smtpNewClient(conn, d.Host)
 	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	// Clear the deadline after successful client creation
+	if err := conn.SetDeadline(time.Time{}); err != nil {
+		c.Close()
 		return nil, err
 	}
 
