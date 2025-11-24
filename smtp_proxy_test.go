@@ -18,22 +18,20 @@ func TestDialerWithInvalidProxy(t *testing.T) {
 	}
 }
 
-// TestDialerWithNilConnection tests that the dialer handles nil connection gracefully
+// TestDialerWithNilConnection tests that the dialer handles nil connection gracefully.
+// This is a defensive test for edge cases where buggy network implementations might
+// return a nil connection without an error, which violates the Go convention but
+// could happen with certain proxy or network drivers.
 func TestDialerWithNilConnection(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.SetSocks5Proxy("test-proxy:1080")
 
 	// Mock the netDialTimeout to return nil connection but no error
-	// This simulates a buggy proxy implementation
 	originalNetDialTimeout := netDialTimeout
 	defer func() { netDialTimeout = originalNetDialTimeout }()
 
-	// We can't easily mock proxy.SOCKS5 dial, so let's test the regular dial path
-	d.Socks5Proxy = "" // Reset proxy to test regular path
-
 	netDialTimeout = func(network, address string, timeout time.Duration) (net.Conn, error) {
-		// Return nil connection with nil error - this should not happen in real code
-		// but we want to be defensive
+		// Return nil connection with nil error - this violates Go conventions
+		// but we want to be defensive against buggy implementations
 		return nil, nil
 	}
 
