@@ -37,14 +37,15 @@ Please format your commit messages as follows:
 ### Types:
 - `feat:` - A new feature (triggers a minor version bump)
 - `fix:` - A bug fix (triggers a patch version bump)
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, missing semi-colons, etc.)
-- `refactor:` - Code refactoring without changing functionality
-- `perf:` - Performance improvements
-- `test:` - Adding or updating tests
-- `build:` - Changes to build system or dependencies
-- `ci:` - Changes to CI configuration
-- `chore:` - Other changes that don't modify src or test files
+- `perf:` - Performance improvements (triggers a patch version bump)
+- `refactor:` - Code refactoring without changing functionality (triggers a patch version bump)
+- `revert:` - Reverts a previous commit (triggers a patch version bump)
+- `docs:` - Documentation changes (no release)
+- `style:` - Code style changes (no release)
+- `test:` - Adding or updating tests (no release)
+- `build:` - Changes to build system or dependencies (no release)
+- `ci:` - Changes to CI configuration (no release)
+- `chore:` - Other changes that don't modify src or test files (no release)
 
 ### Breaking Changes:
 Add `BREAKING CHANGE:` in the commit footer to trigger a major version bump.
