@@ -12,6 +12,11 @@ import (
 	"golang.org/x/net/proxy"
 )
 
+const (
+	// smtpClientTimeout is the timeout for SMTP client creation
+	smtpClientTimeout = 5 * time.Second
+)
+
 // A Dialer is a dialer to an SMTP server.
 type Dialer struct {
 	// Host represents the host of the SMTP server.
@@ -94,7 +99,7 @@ func (d *Dialer) Dial() (SendCloser, error) {
 	}
 
 	// Set a 5-second timeout for SMTP client creation
-	if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(smtpClientTimeout)); err != nil {
 		conn.Close()
 		return nil, err
 	}
