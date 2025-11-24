@@ -87,6 +87,10 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		return nil, err
 	}
 
+	if conn == nil {
+		return nil, fmt.Errorf("dial failed: connection is nil")
+	}
+
 	if d.SSL {
 		conn = tlsClient(conn, d.tlsConfig())
 	}
